@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Тренажер: проценты по займам и кредитам</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#f5f6f8;--card:#fff;--tx:#1d2330;--mut:#667085;--bd:#d5d9e2;--ac:#c2410c;--ok:#12805c;--okb:#e3f6ee;--er:#b42318;--erb:#fdeceb}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14171d;--card:#1d222b;--tx:#e8ebf1;--mut:#9aa3b2;--bd:#343b48;--ac:#ffa066;--ok:#5fd3a5;--okb:#12352a;--er:#ff8f85;--erb:#3b1b19}}
+:root[data-theme="dark"]{--bg:#14171d;--card:#1d222b;--tx:#e8ebf1;--mut:#9aa3b2;--bd:#343b48;--ac:#ffa066;--ok:#5fd3a5;--okb:#12352a;--er:#ff8f85;--erb:#3b1b19}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:720px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:20px;margin:0 0 4px}
+.sub{color:var(--mut);font-size:14px;margin-bottom:14px}
+.tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.tab{background:var(--card);color:var(--tx);border:1px solid var(--bd);padding:8px 16px}
+.tab.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .tab.on,:root:not([data-theme="light"]) .pri{color:#2a1204}}
+:root[data-theme="dark"] .tab.on,:root[data-theme="dark"] .pri{color:#2a1204}
+.tab .chk{margin-left:6px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:18px;margin-bottom:16px}
+.task{font-size:17px}
+label{display:block;font-weight:600;margin:14px 0 4px;font-size:15px}
+.hint{font-weight:400;color:var(--mut);font-size:13px}
+input{width:100%;box-sizing:border-box;padding:10px 12px;font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--bd);border-radius:8px}
+input:focus{outline:2px solid var(--ac);border-color:transparent}
+input.ok{border-color:var(--ok);background:var(--okb)}
+input.bad{border-color:var(--er);background:var(--erb)}
+.fb{font-size:13px;margin-top:4px}
+.fb.ok{color:var(--ok)}.fb.bad{color:var(--er)}
+.row{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+button{font:inherit;font-weight:600;padding:10px 18px;border-radius:8px;border:1px solid var(--ac);cursor:pointer}
+.pri{background:var(--ac);color:#fff}
+.sec{background:transparent;color:var(--ac)}
+.sol{display:none}
+.score{font-weight:700;margin-bottom:10px}
+.sol .f{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--bg);padding:6px 10px;border-radius:6px;margin:4px 0 10px;overflow-x:auto;white-space:nowrap}
+.sol p{margin:6px 0}
+.pane{display:none}.pane.on{display:block}
+</style>
+</head>
+<body>
+<main>
+<h1>Тренажер: рассчитайте проценты по займам и кредитам</h1>
+<div class="sub">Ключевая ставка: до 26 июля 2026 — 14,25%, с 27 июля — 14%</div>
+<div class="tabs" id="tabs"></div>
+<div id="panes"></div>
+</main>
+
+<script>
+function nums(s){
+  s = s.replace(/(\d)[ \u00a0](\d{3})(?!\d)/g, '$1$2');
+  s = s.replace(/(\d{1,2})\.(0[1-9]|1[0-2])(?:\.\d{2,4})?/g, '$1 ');
+  return (s.match(/\d+(?:[.,]\d+)?/g) || []).map(x => String(parseFloat(x.replace(',', '.'))));
+}
+function num(s){
+  const m = s.replace(/\s|\u00a0/g,'').replace(',', '.').match(/-?\d+(?:\.\d+)?/);
+  return m ? parseFloat(m[0]) : NaN;
+}
+const P = (need, hint, forbid=[]) => ({type:'p', hint,
+  test: v => { const n = nums(v);
+    return need.every(x => [].concat(x).some(y => n.includes(y))) && !forbid.some(x => n.includes(x)); }});
+const N = (val, hint) => ({type:'n', hint, test: v => Math.abs(num(v) - val) < 0.011});
+const EX = ' Например, с 3 по 9 мая, 14,50%';
+
+const TASKS = [
+{
+  title: 'Задача 1',
+  text: 'Компания получила заем в размере <b>1 500 000 руб.</b> <b>30 июня 2026 года</b>. По договору ставка равна ключевой ставке ЦБ плюс <b>2 процентных пункта</b> и пересматривается в день изменения ключевой ставки. Рассчитайте проценты за период с 1 по 31 июля включительно.',
+  fields: [
+    {label:'Период 1', sub:'даты и договорная ставка.' + EX, ...P(['1','26','16.25'], 'Ожидается: с 1 по 26 июля (26 дней), договорная ставка 14,25% + 2% = 16,25%')},
+    {label:'Период 2', sub:'даты и договорная ставка', ...P(['27','31','16'], 'Ожидается: с 27 по 31 июля (5 дней), договорная ставка 14% + 2% = 16%', ['16.25'])},
+    {label:'Проценты за период 1, руб.', ...N(17363.01, 'Верно: 1 500 000 × 16,25% × 26 / 365 = 17 363,01')},
+    {label:'Проценты за период 2, руб.', ...N(3287.67, 'Верно: 1 500 000 × 16% × 5 / 365 = 3 287,67')},
+    {label:'Итого проценты за июль, руб.', ...N(20650.68, 'Верно: 17 363,01 + 3 287,67 = 20 650,68')}
+  ],
+  sol: `<p>С 1 по 26 июля ключевая ставка 14,25%, значит договорная:</p><div class="f">14,25% + 2% = 16,25%</div>
+<p>Проценты:</p><div class="f">1 500 000 × 16,25% × 26 / 365 = 17 363,01 руб.</div>
+<p>С 27 по 31 июля ключевая ставка 14%, значит договорная:</p><div class="f">14% + 2% = 16%</div>
+<p>Проценты:</p><div class="f">1 500 000 × 16% × 5 / 365 = 3 287,67 руб.</div>
+<p><b>Итого за июль:</b></p><div class="f">17 363,01 + 3 287,67 = 20 650,68 руб.</div>`
+},
+{
+  title: 'Задача 2',
+  text: 'Организация получила заем в размере <b>800 000 руб.</b> <b>30 июня 2026 года</b> под фиксированные <b>16% годовых</b>. Определите, изменится ли договорная ставка 27 июля, и рассчитайте проценты за период с 1 по 31 июля включительно.',
+  fields: [
+    {label:'Изменится ли договорная ставка 27 июля?', sub:'да / нет', type:'p',
+      test: v => /(^|[^а-яё])нет|не\s*(измен|меня|повлия)/i.test(v) && !/(^|[^а-яё])да([^а-яё]|$)/i.test(v),
+      hint:'Ожидается: нет, ставка фиксированная, изменение ключевой ставки на нее не влияет'},
+    {label:'Период и ставка', sub:'Например, с 3 по 9 мая, 14,50%', ...P(['1','31','16'], 'Ожидается: с 1 по 31 июля (31 день), ставка 16% на весь период', ['16.25'])},
+    {label:'Проценты за июль, руб.', ...N(10871.23, 'Верно: 800 000 × 16% × 31 / 365 = 10 871,23')}
+  ],
+  sol: `<p>Поскольку ставка по договору фиксированная, изменение ключевой ставки ЦБ с 27 июля на неё не влияет.</p>
+<p>За период с 1 по 31 июля — 31 день:</p><div class="f">800 000 × 16% × 31 / 365 = 10 871,23 руб.</div>`
+},
+{
+  title: 'Задача 3',
+  text: 'Компания получила заем в размере <b>3 000 000 руб.</b> <b>30 июня 2026 года</b>. Договорная ставка равна ключевой ставке ЦБ плюс <b>1,5 процентного пункта</b>; ее пересматривают с первого числа месяца, следующего за месяцем изменения ключевой ставки. Рассчитайте проценты отдельно за июль и август 2026 года и определите общую сумму за два месяца.',
+  fields: [
+    {label:'Июль: период и договорная ставка', sub:'' + EX, ...P(['1','31','15.75'], 'Ожидается: с 1 по 31 июля (31 день), ставка 14,25% + 1,5% = 15,75% (ключевая ставка изменилась 27 июля, пересмотр только с 1 августа)')},
+    {label:'Август: период и договорная ставка', ...P(['1','31','15.5'], 'Ожидается: с 1 по 31 августа (31 день), ставка 14% + 1,5% = 15,5%', ['15.75'])},
+    {label:'Проценты за июль, руб.', ...N(40130.14, 'Верно: 3 000 000 × 15,75% × 31 / 365 = 40 130,14')},
+    {label:'Проценты за август, руб.', ...N(39493.15, 'Верно: 3 000 000 × 15,5% × 31 / 365 = 39 493,15')},
+    {label:'Общая сумма за два месяца, руб.', ...N(79623.29, 'Верно: 40 130,14 + 39 493,15 = 79 623,29')}
+  ],
+  sol: `<p>В июле ключевая ставка изменилась только 27 июля, поэтому весь июль применяется прежняя договорная ставка:</p><div class="f">14,25% + 1,5% = 15,75%</div>
+<p>За июль, 31 день:</p><div class="f">3 000 000 × 15,75% × 31 / 365 = 40 130,14 руб.</div>
+<p>С 1 августа применяется новая договорная ставка:</p><div class="f">14% + 1,5% = 15,5%</div>
+<p>За август, 31 день:</p><div class="f">3 000 000 × 15,5% × 31 / 365 = 39 493,15 руб.</div>
+<p><b>Общая сумма за июль и август:</b></p><div class="f">40 130,14 + 39 493,15 = 79 623,29 руб.</div>`
+}
+];
+
+const tabsEl = document.getElementById('tabs'), panesEl = document.getElementById('panes');
+const tabBtns = [], panes = [];
+function show(i){
+  tabBtns.forEach((b,k) => b.classList.toggle('on', k === i));
+  panes.forEach((p,k) => p.classList.toggle('on', k === i));
+  window.scrollTo({top:0});
+}
+TASKS.forEach((t, ti) => {
+  const tb = document.createElement('button');
+  tb.className = 'tab'; tb.innerHTML = t.title + '<span class="chk"></span>';
+  tb.onclick = () => show(ti);
+  tabsEl.appendChild(tb); tabBtns.push(tb);
+
+  const pane = document.createElement('div'); pane.className = 'pane';
+  pane.innerHTML = `<div class="card task">${t.text}</div><div class="card"><div class="fields"></div>
+    <div class="row"><button class="pri">Отправить решение</button><button class="sec">Начать заново</button></div></div>
+    <div class="card sol"><div class="score"></div>${t.sol}</div>`;
+  const box = pane.querySelector('.fields');
+  const inputs = t.fields.map((f, fi) => {
+    const id = `t${ti}f${fi}`;
+    const w = document.createElement('div');
+    w.innerHTML = `<label for="${id}">${f.label}${f.sub ? ' <span class="hint">— ' + f.sub + '</span>' : ''}</label>
+      <input id="${id}" autocomplete="off"${f.type === 'n' ? ' inputmode="decimal"' : ''}><div class="fb"></div>`;
+    box.appendChild(w);
+    return {inp: w.querySelector('input'), fb: w.querySelector('.fb')};
+  });
+  const sol = pane.querySelector('.sol');
+  pane.querySelector('.pri').onclick = () => {
+    if (inputs.some(x => !x.inp.value.trim()) && !confirm('Есть незаполненные поля. Отправить решение всё равно?')) return;
+    let score = 0;
+    t.fields.forEach((f, i) => {
+      const ok = f.test(inputs[i].inp.value), {inp, fb} = inputs[i];
+      if (ok) score++;
+      inp.className = ok ? 'ok' : 'bad';
+      fb.className = 'fb ' + (ok ? 'ok' : 'bad');
+      fb.textContent = ok ? '✓ Верно' : '✗ Неверно. ' + f.hint;
+    });
+    const all = score === t.fields.length;
+    sol.querySelector('.score').textContent = `Результат: ${score} из ${t.fields.length}` + (all ? ' — отлично!' : '');
+    sol.style.display = 'block';
+    tb.querySelector('.chk').textContent = all ? '✓' : `${score}/${t.fields.length}`;
+    sol.scrollIntoView({behavior:'smooth', block:'start'});
+  };
+  pane.querySelector('.sec').onclick = () => {
+    inputs.forEach(x => { x.inp.value = ''; x.inp.className = ''; x.fb.textContent = ''; });
+    sol.style.display = 'none'; tb.querySelector('.chk').textContent = '';
+    window.scrollTo({top:0, behavior:'smooth'});
+  };
+  panesEl.appendChild(pane); panes.push(pane);
+});
+show(0);
+</script>
+</body>
+</html>
